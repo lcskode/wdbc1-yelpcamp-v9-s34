@@ -17,29 +17,31 @@ router.get("/", function(req, res){
 });
 
 // CREATE - save newly added campground
-router.post("/", function(req, res){
+router.post("/", isLoggedIn, function(req, res){
   // get data from new campground form and add to campgrounds db
   var name = req.body.name;
   var image = req.body.image;
   var desc = req.body.description;
+  var author = {
+    id: req.user._id,
+    username: req.user.username
+  }
   // make name and image variables as object
-  var newCampground = {name: name, image: image, description: desc};
-  // and push newCampground to campgrounds array
-  // campgrounds.push(newCampground);
-
+  var newCampground = {name: name, image: image, description: desc, author: author};
   // Create new campground and save to db
   Campground.create(newCampground, function(err, newlyCreated){
     if (err) {
       console.log(err)
     } else {
       // redirect back to campgrounds page which by default will go to /campgrounds app.get ROUTE
+      console.log(newlyCreated);
       res.redirect("/campgrounds");
     }
   });  
 });
 
 // NEW - add new campground
-router.get("/new", function(req, res){
+router.get("/new", isLoggedIn, function(req, res){
   res.render("campgrounds/new");
 });
 
@@ -59,5 +61,16 @@ router.get("/:id", function(req, res){
     }
   });
 });
+
+// MIDDLEWARE
+// add isLoggedIn middleware 
+function isLoggedIn(req, res, next){
+  if(req.isAuthenticated()){
+    // if authenticated, continue showing pages
+    return next();
+  }
+  // if not authenticated, show login page, 
+  res.redirect("/login");
+}
 
 module.exports = router;
